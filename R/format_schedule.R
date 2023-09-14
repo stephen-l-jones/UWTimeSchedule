@@ -10,6 +10,7 @@ meeting <- function (schedule) {
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) as.integer(year(ed_quarter_mode(x, "fiscal")))),
       sapply(df$quarter, function(x) as.integer(quarter(ed_quarter_mode(x, "fiscal")))),
+      df$course_text,
       sapply(df$section, function(x) paste(paste(x$course_code, x$section), collapse = " / ")),
       df$course_title,
       df$course_desig,
@@ -20,7 +21,7 @@ meeting <- function (schedule) {
   )
   names(out_format) <- c(
     "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
-    "Section","Course abbreviation","Designation","Course type",
+    "Course code","Section codes","Course abbreviation","Designation","Course type",
     "Day","Time","Location","Count weight"
   )
   return (out_format)
@@ -37,6 +38,7 @@ instructor <- function (schedule) {
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) as.integer(year(ed_quarter_mode(x, "fiscal")))),
       sapply(df$quarter, function(x) as.integer(quarter(ed_quarter_mode(x, "fiscal")))),
+      df$course_text,
       sapply(df$section, function(x) paste(paste(x$course_code, x$section), collapse = " / ")),
       df$course_title,
       df$course_desig,
@@ -47,7 +49,7 @@ instructor <- function (schedule) {
   )
   names(out_format) <- c(
     "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
-    "Section","Course abbreviation","Designation","Course type",
+    "Course code","Section codes","Course abbreviation","Designation","Course type",
     "Instructor","Count weight"
   )
   return (out_format)
@@ -91,6 +93,7 @@ format_raw <- function (schedule) {
     }
     df[[i]] <- data.frame(
       quarter      = I(list(x$quarter)),
+      course_text  = x$course_text,
       course_title = x$course_title,
       course_desig = x$sln_desig,
       course_type  = x$data$sln$Type[1],
