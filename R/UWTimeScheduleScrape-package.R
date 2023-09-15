@@ -11,7 +11,7 @@ i_pattern <- paste0("^(", paste(i_quarter, collapse = "|"), ")")
 Q_pattern <- paste0("^(", paste(Q_quarter, collapse = "|"), ")")
 N_pattern <- paste0("^(", paste(stringr::str_to_upper(N_quarter), collapse = "|"), ")")
 
-exclude_body_text <- c("Display Textbooks","Subscribe to seat availability notifications")
+exclude_body_text <- c("Display Textbooks"," Subscribe to seat availability notifications")
 exclude_header_text <- c("Meetings")
 designation_position <- 114
 joint_offer_text <- "^Offered jointly with "

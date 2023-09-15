@@ -1,9 +1,14 @@
 
 #' @export
 uw_time_schedule <- function (
-    quarter, course_prefix, course_number = NULL, campus = c("bothell","tacoma","seattle")
+    quarter, course_prefix, course_number = NULL, campus = c("bothell","tacoma","seattle"),
+    start_selenium = TRUE
 ) {
-  selenium <- start_selenium()
+  if (identical(start_selenium, TRUE)) {
+    selenium <- start_selenium()
+  } else {
+    selenium <- NULL
+  }
   if (missing(quarter) || missing(course_prefix)) {
     quarter_mode <- NULL
     schedule <- list()
@@ -34,8 +39,19 @@ uw_time_schedule <- function (
   get_raw_schedule_function <- function () {
     return (schedule)
   }
+  get_quarter_mode_function <- function () {
+    return (quarter_mode)
+  }
   set_raw_schedule_function <- function (x) {
     schedule <<- x
+  }
+  set_quarter_mode_function <- function (mode = c("calendar","academic","fiscal")) {
+    mode <- match.arg(mode)
+    if (is.null(quarter_mode)) {
+      quarter_mode <<- mode
+    } else {
+      stop(sprintf("Quarter mode already set to %s.", quarter_mode))
+    }
   }
   read_schedule_function <- function (quarter, course_prefix, course_number = NULL,
                                       campus = c("bothell","tacoma","seattle")) {
@@ -52,11 +68,13 @@ uw_time_schedule <- function (
     list(
       append_schedule  = append_schedule_function,
       read_schedule    = read_schedule_function,
-      get_raw_schedule = get_raw_schedule_function,
-      set_raw_schedule = set_raw_schedule_function,
       instructor       = instructor_function,
       meeting          = meeting_function,
       section          = section_function,
+      get_raw_schedule = get_raw_schedule_function,
+      set_raw_schedule = set_raw_schedule_function,
+      get_quarter_mode = get_quarter_mode_function,
+      set_quarter_mode = set_quarter_mode_function,
       start_selenium   = start_selenium_function,
       stop_selenium    = stop_selenium_function
     ),

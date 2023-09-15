@@ -2,7 +2,14 @@
 meeting <- function (schedule) {
   if (length(schedule) == 0) return (NULL)
   df <- format_raw(schedule)
-  times <- sapply(df$meeting, nrow)
+  times_meeting <- sapply(df$meeting, nrow)
+  times_section <- sapply(df$section, nrow)
+  times <- times_meeting * times_section
+  meeting_index <- rep(seq_len(sum(times_meeting)), rep(times_section, times_meeting))
+  section_index <- rep(seq_len(sum(times_section)), rep(times_meeting, times_section))
+  meeting_reorder <- unlist(mapply(function(a, b, c) {
+    matrix(seq_len(b * c) + a - b * c, b, c, byrow = TRUE)
+  }, cumsum(times), times_meeting, times_section))
   out_format <- cbind(
     data.frame(
       sapply(df$quarter, format),
@@ -10,19 +17,18 @@ meeting <- function (schedule) {
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) as.integer(year(ed_quarter_mode(x, "fiscal")))),
       sapply(df$quarter, function(x) as.integer(quarter(ed_quarter_mode(x, "fiscal")))),
-      df$course_text,
-      sapply(df$section, function(x) paste(paste(x$course_code, x$section), collapse = " / ")),
       df$course_title,
       df$course_desig,
       df$course_type
     )[rep(seq_along(times), times),],
-    do.call(rbind, df$meeting),
+    do.call(rbind, df$meeting)[meeting_index,][meeting_reorder,],
+    do.call(rbind, df$section)[section_index, c("sln","course_code","section")],
     rep(round(1/times, 2), times) 
   )
   names(out_format) <- c(
     "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
-    "Course code","Section codes","Course abbreviation","Designation","Course type",
-    "Day","Time","Location","Count weight"
+    "Course abbreviation","Designation","Course type",
+    "Day","Time","Location","SLN","Course code","Section","Count weight"
   )
   return (out_format)
 }
@@ -107,7 +113,7 @@ format_raw <- function (schedule) {
   # Remove duplicate joint offer courses
   remove_index <- get_remove_index(jo)
   if (length(remove_index) > 0) {
-    df <- df[-remove_index]
+    df <- df[-remove_index,]
   }
   
   return (df)
@@ -183,5 +189,5 @@ get_remove_index <- function (jo) {
     }
     return (remove_index)
   })
-  do.call(c, remove_index)
+  return (do.call(c, remove_index))
 }
