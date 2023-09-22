@@ -12,6 +12,7 @@ meeting <- function (schedule) {
   }, cumsum(times), times_meeting, times_section))
   out_format <- cbind(
     data.frame(
+      df$record_id,
       sapply(df$quarter, format),
       sapply(df$quarter, function(x) year(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
@@ -23,41 +24,54 @@ meeting <- function (schedule) {
     )[rep(seq_along(times), times),],
     do.call(rbind, df$meeting)[meeting_index,][meeting_reorder,],
     do.call(rbind, df$section)[section_index, c("sln","course_code","section")],
-    rep(round(1/times, 2), times) 
+    rep(1/times, times) 
   )
   names(out_format) <- c(
-    "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
+    "ID","Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
     "Course abbreviation","Designation","Course type",
     "Day","Time","Location","SLN","Course code","Section","Count weight"
   )
+  out_format <- out_format[!duplicated(
+    out_format[,c("Year quarter","Course code","Section","Day","Time")]
+  ),]
   return (out_format)
 }
 
 instructor <- function (schedule) {
   if (length(schedule) == 0) return (NULL)
   df <- format_raw(schedule)
-  times <- sapply(df$instructor, length)
+  times_instructor <- sapply(df$instructor, length)
+  times_section <- sapply(df$section, nrow)
+  times <- times_instructor * times_section
+  instructor_index <- rep(seq_len(sum(times_instructor)), rep(times_section, times_instructor))
+  section_index <- rep(seq_len(sum(times_section)), rep(times_instructor, times_section))
+  instructor_reorder <- unlist(mapply(function(a, b, c) {
+    matrix(seq_len(b * c) + a - b * c, b, c, byrow = TRUE)
+  }, cumsum(times), times_instructor, times_section))
   out_format <- cbind(
     data.frame(
+      df$record_id,
       sapply(df$quarter, format),
       sapply(df$quarter, function(x) year(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) as.integer(year(ed_quarter_mode(x, "fiscal")))),
       sapply(df$quarter, function(x) as.integer(quarter(ed_quarter_mode(x, "fiscal")))),
-      df$course_text,
-      sapply(df$section, function(x) paste(paste(x$course_code, x$section), collapse = " / ")),
       df$course_title,
       df$course_desig,
       df$course_type
     )[rep(seq_along(times), times),],
-    do.call(c, df$instructor),
-    rep(round(1/times, 2), times) 
+    do.call(c, df$instructor)[instructor_index][instructor_reorder],
+    do.call(rbind, df$section)[section_index, c("course_code","section","enrolled","limit")],
+    rep(1/times, times) 
   )
   names(out_format) <- c(
-    "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
-    "Course code","Section codes","Course abbreviation","Designation","Course type",
-    "Instructor","Count weight"
+    "ID","Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
+    "Course abbreviation","Designation","Course type",
+    "Instructor","Course code","Section","Enrolled","Limit","Count weight"
   )
+  out_format <- out_format[!duplicated(
+    out_format[,c("Year quarter","Course code","Section","Instructor")]
+  ),]
   return (out_format)
 }
 
@@ -67,6 +81,7 @@ section <- function (schedule) {
   times <- sapply(df$section, nrow)
   out_format <- cbind(
     data.frame(
+      df$record_id,
       sapply(df$quarter, format),
       sapply(df$quarter, function(x) year(ed_quarter_mode(x, "academic"))),
       sapply(df$quarter, function(x) quarter(ed_quarter_mode(x, "academic"))),
@@ -78,13 +93,16 @@ section <- function (schedule) {
       sapply(df$instructor, function(x) paste(x, collapse = " / "))
     )[rep(seq_along(times), times),],
     do.call(rbind, df$section),
-    rep(round(1/times, 2), times) 
+    rep(1/times, times)
   )
   names(out_format) <- c(
-    "Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
+    "ID","Year quarter","Academic year","Academic quarter","Fiscal year","Fiscal quarter",
     "Course abbreviation","Designation","Course type","Instructor",
     "SLN","Course code","Section","Credits","GE requirement","Enrolled","Limit","Count weight"
   )
+  out_format <- out_format[!duplicated(
+    out_format[,c("Year quarter","Course code","Section")]
+  ),]
   return (out_format)
 }
 
@@ -98,6 +116,7 @@ format_raw <- function (schedule) {
       jo[[length(jo) + 1]] <- list(index = i, quarter = x$quarter, enrollment = enrollment)
     }
     df[[i]] <- data.frame(
+      record_id    = i,
       quarter      = I(list(x$quarter)),
       course_text  = x$course_text,
       course_title = x$course_title,
