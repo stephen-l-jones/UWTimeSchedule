@@ -2,8 +2,8 @@
 meeting <- function (schedule) {
   if (length(schedule) == 0) return (NULL)
   df <- format_raw(schedule)
-  times_meeting <- sapply(df$meeting, nrow)
-  times_section <- sapply(df$section, nrow)
+  times_meeting <- sapply(df$meeting, function(m) if (is.null(m)) 0 else nrow(m))
+  times_section <- sapply(df$section, function(m) if (is.null(m)) 0 else nrow(m))
   times <- times_meeting * times_section
   meeting_index <- rep(seq_len(sum(times_meeting)), rep(times_section, times_meeting))
   section_index <- rep(seq_len(sum(times_section)), rep(times_meeting, times_section))
@@ -41,7 +41,7 @@ instructor <- function (schedule) {
   if (length(schedule) == 0) return (NULL)
   df <- format_raw(schedule)
   times_instructor <- sapply(df$instructor, length)
-  times_section <- sapply(df$section, nrow)
+  times_section <- sapply(df$section, function(m) if (is.null(m)) 0 else nrow(m))
   times <- times_instructor * times_section
   instructor_index <- rep(seq_len(sum(times_instructor)), rep(times_section, times_instructor))
   section_index <- rep(seq_len(sum(times_section)), rep(times_instructor, times_section))
@@ -78,7 +78,7 @@ instructor <- function (schedule) {
 section <- function (schedule) {
   if (length(schedule) == 0) return (NULL)
   df <- format_raw(schedule)
-  times <- sapply(df$section, nrow)
+  times <- sapply(df$section, function(m) if (is.null(m)) 0 else nrow(m))
   out_format <- cbind(
     data.frame(
       df$record_id,
@@ -107,11 +107,14 @@ section <- function (schedule) {
 }
 
 format_raw <- function (schedule) {
-  df <- vector("list", length(schedule))
+  s <- schedule[sapply(schedule, function (x) {
+    !any(str_detect(str_to_upper(x$data$enrollment[["Status"]]), "COURSE WITHDRAWN"))
+  })]
+  df <- vector("list", length(s))
   jo <- list()
-  for (i in seq_along(schedule)) {
-    x <- schedule[[i]]
-    enrollment <- joint_offer_enrollment(x, schedule)
+  for (i in seq_along(s)) {
+    x <- s[[i]]
+    enrollment <- joint_offer_enrollment(x, s)
     if (nrow(enrollment) > 1) {
       jo[[length(jo) + 1]] <- list(index = i, quarter = x$quarter, enrollment = enrollment)
     }

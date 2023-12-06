@@ -1,7 +1,8 @@
 
 #' @import rvest
 scrape_schedule <- function (
-    quarter, course_prefix, course_number = NULL, campus = c("bothell","tacoma","seattle"), cookies
+    quarter, course_prefix, course_number = NULL, campus = c("bothell","tacoma","seattle"),  
+    url_prefix = course_prefix, cookies
 ) {
   quarter <- as.ed_quarter(quarter)
   campus  <- match.arg(campus)
@@ -20,7 +21,7 @@ scrape_schedule <- function (
       cat(sprintf("Retrieving %s %s...", format(qtr), pfx))
 
       # Scrape course
-      schedule_tree <- get_schedule(qtr, pfx, campus)
+      schedule_tree <- get_schedule(qtr, url_prefix[j], campus)
       if (is.null(schedule_tree)) {
         cat("No data found.\n")
         next
@@ -95,7 +96,7 @@ parse_schedule <- function (schedule_tree, quarter, course_prefix, course_filter
 
 #' @import rvest
 get_schedule <- function (
-    quarter, course_prefix, campus = c("bothell","tacoma","seattle")
+    quarter, url_prefix, campus = c("bothell","tacoma","seattle")
 ) {
   quarter <- ed_quarter(quarter, mode = "calendar")
   campus <- match.arg(campus) %>%
@@ -108,7 +109,7 @@ get_schedule <- function (
     schedule_url_prefix,
     campus,
     "/", format(quarter, "%Q%Y")[1],
-    "/", course_prefix,
+    "/", url_prefix,
     ".html"
   )
   schedule_tree <- NULL

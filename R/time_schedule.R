@@ -2,7 +2,7 @@
 #' @export
 uw_time_schedule <- function (
     quarter, course_prefix, course_number = NULL, campus = c("bothell","tacoma","seattle"),
-    start_selenium = TRUE
+    start_selenium = TRUE, url_prefix = course_prefix
 ) {
   if (identical(start_selenium, TRUE)) {
     selenium <- start_selenium()
@@ -14,18 +14,18 @@ uw_time_schedule <- function (
     schedule <- list()
   } else {
     quarter_mode <- ed_quarter_mode(as.ed_quarter(quarter))
-    schedule <- scrape_schedule(quarter, course_prefix, course_number, campus, selenium$cookies)
+    schedule <- scrape_schedule(quarter, course_prefix, course_number, campus, url_prefix, selenium$cookies)
   }
 
   append_schedule_function <- function (quarter, course_prefix, course_number = NULL,
-                                        campus = c("bothell","tacoma","seattle")) {
+                                        campus = c("bothell","tacoma","seattle"), url_prefix = course_prefix) {
     if (is.null(quarter_mode)) {
       quarter_mode <<- ed_quarter_mode(as.ed_quarter(quarter))
     } else {
       quarter <- ed_quarter_mode(as.ed_quarter(quarter), quarter_mode)
     }
     schedule <<- c(schedule,
-                   scrape_schedule(quarter, course_prefix, course_number, campus, selenium$cookies))
+                   scrape_schedule(quarter, course_prefix, course_number, campus, url_prefix, selenium$cookies))
   }
   section_function <- function() {
     section(schedule)
@@ -54,9 +54,9 @@ uw_time_schedule <- function (
     }
   }
   read_schedule_function <- function (quarter, course_prefix, course_number = NULL,
-                                      campus = c("bothell","tacoma","seattle")) {
+                                      campus = c("bothell","tacoma","seattle"), url_prefix = course_prefix) {
     quarter_mode <<- ed_quarter_mode(as.ed_quarter(quarter))
-    schedule <<- scrape_schedule(quarter, course_prefix, course_number, campus, selenium$cookies)
+    schedule <<- scrape_schedule(quarter, course_prefix, course_number, campus, url_prefix, selenium$cookies)
   }
   start_selenium_function <- function () {
     selenium <<- start_selenium()

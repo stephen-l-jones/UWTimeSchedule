@@ -16,3 +16,5 @@ Imports:
     stringr,
     xml2
 RoxygenNote: 7.2.3
+URL: https://github.com/stephen-l-jones/UWTimeSchedule
+BugReports: https://github.com/stephen-l-jones/UWTimeSchedule/issues
